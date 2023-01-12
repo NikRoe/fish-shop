@@ -1,12 +1,39 @@
+import useSWR from "swr";
+
 import { StyledForm, StyledHeading, StyledLabel } from "./ProductForm.styled";
 import { StyledButton } from "../Button/Button.styled";
 
 export default function ProductForm() {
+  const products = useSWR("/api/products");
+
   async function handleSubmit(event) {
     event.preventDefault();
 
     const formData = new FormData(event.target);
     const productData = Object.fromEntries(formData);
+
+    try {
+      const response = await fetch("/api/products", {
+        method: "POST",
+        body: JSON.stringify(productData),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const responseData = await response.json();
+        console.log(responseData);
+
+        products.mutate();
+
+        event.target.reset();
+      } else {
+        console.error(`Error: ${response.status}`);
+      }
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   return (
